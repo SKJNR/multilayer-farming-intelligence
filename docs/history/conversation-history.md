@@ -50,3 +50,11 @@ Further reports revised timing and described generator repair with PAW-based soi
 ## Source archive
 
 Three source files were attached during the conversation and are retained verbatim under `source-drops/`. Their contents should be treated as submitted evidence/artifacts, not necessarily correct conclusions. The most recent typed status update is summarized in `docs/decisions/DR-0041-generator-coverage-and-reference-freeze.md`.
+
+## Stage 7 — Latest Qwen closure report and calibration gate
+
+The latest Qwen response says the generator was repaired using PAW-based soil sampling, a 10,000-step × 10-repetition timing benchmark (reported mean 0.1971 s; 19.71 µs/step), and Normal/Storm/Aeration_Test scenario families. It declares the explicit simulator frozen as `v1.0.0-ref`, defers surrogates, and proposes a real-world calibration gate before treating the model as agriculturally valid.
+
+The full submitted response is preserved in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`.
+
+**Independent status:** these remain claims from a report, not independently verified execution in this repository. The source implementation, timing script, scenario configuration, raw logs, and real-world measurements still need to be committed and rerun. The source freeze can be treated as an intended release label only when it points to an actual committed source revision and its tests.

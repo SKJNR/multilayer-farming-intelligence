@@ -49,3 +49,17 @@ A multilayer farming intelligence system combining:
 ## Next action
 
 Ask the source AI/user to export the actual source artifacts cited in `source-drops/qwen-sprint1-reexecution-and-sprint2-benchmark-report.txt`. Do not recreate missing code from narrative descriptions and claim it is the original implementation.
+
+## Latest submitted Qwen report (2026-10-14)
+
+The latest response claims that:
+
+- the explicit two-layer simulator was frozen as `v1.0.0-ref` and ML surrogates were deferred;
+- a 10,000-step × 10-repetition timing audit measured 0.1971 seconds mean (19.71 µs/step);
+- 1,000 PAW-derived soil profiles met the declared moisture ordering;
+- Normal, Storm and Aeration_Test scenario families exercised different runoff/aeration conditions; and
+- the next milestone is calibration/evaluation against suitable measured soil-moisture observations.
+
+**Verification status: reported, not independently reproduced.** The full response is archived in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`. The actual source code, sampler, scenario definitions, timing harness, and raw execution logs have not been supplied as files in this repository. Until they are committed and reproducibly run, `v1.0.0-ref` is a reported label rather than a verified release artifact.
+
+The project can design the knowledge ontology in parallel, but the simulator must not be described as agriculturally validated or used to make confident field recommendations until suitable calibration and independent evaluation are completed.

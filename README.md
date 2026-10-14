@@ -47,3 +47,7 @@ Use these labels in documents and issues:
 ## Scope note
 
 This repository captures the currently available multilayer farming / synthetic-data conversation and the three text files supplied with it. It cannot automatically export every other ChatGPT or Qwen conversation, hidden model state, or unrelated prior project discussion. Add those conversations or relevant summaries explicitly if they should become part of this source of truth.
+
+## Latest recorded update
+
+The latest submitted Qwen report is archived in [`source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`](source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md). It claims generator repairs and a `v1.0.0-ref` freeze, but the underlying source and logs are not present here, so those execution claims remain unverified. See [`CURRENT_STATE.md`](CURRENT_STATE.md) and [DR-004.1](docs/decisions/DR-0041-generator-coverage-and-reference-freeze.md) for current status.
