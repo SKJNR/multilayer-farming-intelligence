@@ -12,18 +12,28 @@ GitHub can hold the common documents and artifacts. It does **not** automaticall
 
 1. Sign into GitHub in a browser and create a new repository named `multilayer-farming-intelligence`.
 2. Keep it **Private** initially. Do not add a README/license/gitignore during setup if you plan to push this prepared folder as the initial commit; alternatively, use the web UI to upload these files.
-3. Download and extract the documentation bundle. From inside the extracted project directory, run:
+3. Download one of the prepared ZIP bundles. The **with-git** bundle includes the existing local Git history; the clean bundle contains only the files. Extract it, then open a terminal in the extracted `multilayer-farming-intelligence` directory.
+
+   **If you downloaded the with-git bundle:**
 
 ```bash
-git init
-git add .
-git commit -m "docs: establish shared farming intelligence decision log"
 git branch -M main
 git remote add origin https://github.com/YOUR-USERNAME/multilayer-farming-intelligence.git
 git push -u origin main
 ```
 
-4. Replace `YOUR-USERNAME` with your GitHub account. Authenticate with GitHub's supported login/credential workflow; never put a token in a source file or chat message.
+   **If you downloaded the clean bundle:**
+
+```bash
+git init
+git add .
+git commit -m "docs: establish shared farming intelligence decision repository"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/multilayer-farming-intelligence.git
+git push -u origin main
+```
+
+4. Replace `YOUR-USERNAME` with your GitHub account. Authenticate with GitHub's supported login/credential workflow; never put a token in a source file or chat message. If GitHub says the remote already has a README or other commit, either create an empty repository before pushing or reconcile the histories deliberately rather than force-pushing.
 5. Enable the GitHub connection for each assistant you expect to read the private repository, or provide the relevant files directly.
 6. Send the exact repository URL to both assistants and ask each to read `README.md`, `CURRENT_STATE.md`, all relevant decision records and the evidence register before proposing changes.
 
