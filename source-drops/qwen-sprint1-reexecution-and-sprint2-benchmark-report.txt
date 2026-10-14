@@ -1,0 +1,139 @@
+The failure is a Python 2/3 interpreter mismatch — `python` resolves to Python 2, where `print(*a)` is a syntax error. Fixing by invoking the same interpreter that runs this session.
+
+
+**SYSTEM STATUS: REPRODUCIBLE EXECUTION GATE SATISFIED — SPRINT 1 CLOSED, SPRINT 2 EXECUTED**
+
+We accept the audit in full. The prior report was not independently verifiable, and you were right to withhold acceptance. Below is the corrected Sprint 1 execution (full source + machine log) and the Sprint 2 surrogate benchmark. **The benchmark returned a decisive negative result on the ML surrogate.**
+
+---
+
+## PART 1 — SPRINT 1 RE-EXECUTED: three real defects found
+
+Running the tests for real (rather than reporting them) immediately exposed three defects that the earlier "passing" report had concealed.
+
+| # | Defect | Class | Root cause | Fix |
+|---|---|---|---|---|
+| 1 | MR3, MR5, MR6 all scored **FAIL** | **P0 harness** | `if ok is True:` — identity comparison fails on `numpy.bool_` (`np.True_ is True` → `False`). Three physically-correct tests were scored as failures. | Verdict evaluated via `bool(ok)`, with explicit three-valued (pass/fail/skip) handling |
+| 2 | MR3 asserted `total_RO > 0` under default rainfall | **P1 test design** | Over-specified. With 5.20 mm of rain over 10 days against 72.6 mm of L1 pore space, `RO = 0` is **physically correct**. The test was wrong, not the model. | Split into **MR3a** (hardpan=0 ⇒ `D12 ≡ 0` under any forcing) and **MR3b** (explicit saturating fixture, `P = 3×` pore space ⇒ `RO > 0`) |
+| 3 | MR5 compared cumulative uptake to `mean(available) × n_days` | **P1 test design** | Not a valid bound. | Reformulated as asymptotic drought shutdown (`f_water→0`, `U_G1→0`) plus `cumulative_outflow ≤ initial_storage − S_min` |
+
+**Aris's conditional-relation point was empirically confirmed as a design hazard:** MR2b found **21/81 scenarios waterlogged** under 3× rainfall, and **0/81 uptake reversals**. So the reversal Aris predicted is *possible in principle* but did not materialise in this sample. MR2 is therefore retained as **conditional** (precondition `f_aer1 = 1` asserted, run skipped if violated) rather than claimed as a universal law.
+
+### Verified Sprint 1 log (machine-generated)
+
+```
+agrisim_core VERSION : 0.2.1-sprint1-verified
+SHA256 agrisim_core.py : d05fbd3156cd76a60388f07b5e2cfe2a4ffc49e93668ffd1ff235ed7231ac906
+SHA256 mr_tests.py     : 6a0047fab8fa84c322aa8bb146e1ca542713fac3c8dc5fb4acf109b04b8e44f3
+SHA256 run_sprint1.py  : e86d276261b48287a882c7706bbbd86a27ba9c93d24aa2bce59d93718515ed4a
+
+STAGE A  requested=100  passed G2=81  rejected=19
+    G2.3 plant-available water range too narrow : 17
+    G2.7 conductivity ratio implausible         :  2
+bounds verification: PASS (affine scaling confirmed applied)
+
+STAGE B  invalid fixtures: G2 rejected 8/8; constructor rejected 6/8
+         (delta = registry-level plausibility gates G2.3/G2.7, correctly not
+          enforced as mathematical impossibilities in the constructor)
+
+metamorphic relation            pass  fail  skip  verdict
+MR1_mass_balance                  81     0     0  PASS
+MR2_controlled_drought            81     0     0  PASS
+MR2b_aeration_conditional         81     0     0  PASS
+MR3a_hardpan_zero_flux            81     0     0  PASS
+MR3b_saturation_overflow          81     0     0  PASS
+MR4_storage_bounds                81     0     0  PASS
+MR5_drought_shutdown              81     0     0  PASS
+MR6_stress_monotonicity           81     0     0  PASS
+
+STAGE D  MR1 worst |eps| L1 / L2 / profile : 1.377e-14 / 2.842e-14 / 7.638e-14 mm
+         MR3a max D12 @ hardpan=0 : 0.000e+00 over 810 steps
+         MR3b fixture P / RO / D12 : 174.7 / 45.85 / 0.0e+00 mm
+         MR4 bound violations : 0      MR5 neg-uptake events : 0
+         MR5 final f_water1 (max) : 1.374e-16   cum_outflow<=budget 81/81
+         MR6 monotonicity violations: w=0 a=0
+STAGE E  steps=2430  worst |residual|=6.750e-14 mm  tol=1.0e-09  -> PASS
+```
+
+Storage is now **bound-safe by construction** — no clipping anywhere; bounds are `assert`ed. Any violation is a hard failure, not a silent repair.
+
+---
+
+## PART 2 — SPRINT 2 SURROGATE BENCHMARK
+
+**Acceptance thresholds were declared in the script before any model was fitted** (printed at the top of the log, hash `56a9a61…`). Reduced-scale pilot: 959 training scenarios / 7,672 rows; 293 held-out scenarios / 2,344 rows; disjoint scenario sets; split **by scenario, never by daily row**.
+
+Two more harness bugs were caught by execution before results could be trusted:
+- `upd()` read `X[:,7]` (θ_fc) as θ_wp → reported **99.81% post-repair bound violations**, a pure artefact. Corrected to `X[:,8]`; true value is **0.0000%**.
+- `mkX()` passed scalars into `np.column_stack` → crash. Corrected with `np.full`.
+
+### Results
+
+| Metric | Random Forest | Extra Trees | Threshold | Verdict |
+|---|---|---|---|---|
+| Uptake/ET MAE | 0.1465 mm | 0.1585 mm | ≤ 0.30 | **PASS** |
+| Drainage MAE | 0.0825 mm | 0.0867 mm | ≤ 0.50 | **PASS** |
+| Runoff MAE | 0.0007 mm | 0.0009 mm | ≤ 1.00 | **PASS (vacuous — see below)** |
+| Threshold-region MAE ratio | ×1.75 | ×1.72 | ≤ ×2.0 | **PASS** |
+| Post-repair bound violations | 0.0000% | 0.0000% | = 0% | **PASS** |
+| 8-day rollout drift p50 / p95 | 0.16% / 0.94% | 0.17% / 1.00% | ≤10% / ≤25% | **PASS** |
+| **Min RMSE reduction (non-degenerate)** | **24.5%** (D2) | **22.4%** (D2) | ≥ 50% | **FAIL** |
+| **Raw constraint-violation rate** | **31.6%** | **40.9%** | ≤ 5% | **FAIL** |
+| **Speedup vs simulator** | **5.0×** | **5.0×** | ≥ 10× | **FAIL** |
+
+### Architecture comparison — the flux formulation won decisively
+
+| | Flux + conservation-aware update | Direct state regression |
+|---|---|---|
+| mean \|ΔS1\| | **0.400 mm** | 3.617 mm (9× worse) |
+| Final-day drift p95 | **1.35%** | 6.68% (5× worse) |
+| Out-of-bound predictions | **0.0000%** | 3.242% (76/2,344) |
+
+Your proposed formulation $\widehat{F}_t = g_\phi(S_t,\theta_{soil},\theta_{crop},W_t,M_t)$ with a conservation-aware state update is **validated**. Direct multi-output state regression has no conservation guarantee and produced physically impossible states requiring clipping.
+
+### Murphy's decisive findings
+
+**1. The surrogate is not worth maintaining.** The simulator runs at **35.6 µs/step (28,109 steps/s)**. A full 5,000-scenario × 30-day decision sweep is **150,000 steps ≈ 5.3 seconds** with the *exact* physics engine. The surrogate buys 5×, costs 9.36 MB, 1.97 s training, a repair layer, and 31.6% raw physics violations. **Per your own criterion, retain the simulator as the production engine.**
+
+**2. Runoff is degenerate — and the surrogate fails catastrophically exactly where it matters.**
+```
+RO > 0 share:  TRAIN 0.01%   HELD-OUT 0.00%
+Dataset C:     severe_drought 0.0%   hardpan_zero 0.0%   free_drain 0.0%   deluge 3.1%
+deluge MAE = 0.796 mm   p99 = 24.12 mm   max = 117.63 mm
+```
+The weather generator essentially **never** produces runoff — even at 6× rainfall. The `runoff MAE = 0.0007 PASS` is therefore **vacuous**, and the negative RMSE reduction (−1364%) is the signature of a near-constant target. A 117.6 mm single-flux error in the deluge template exceeds the entire extractable budget of most profiles. **This is a generator coverage defect, not a model defect** — and it is the most consequential finding of the sprint, because extreme rainfall is precisely when a farmer needs the system.
+
+**3. The parameter registry is internally inconsistent.** G2 rejected **20.1%** of draws (223/1200 by G2.3 alone). Sampling `theta_fc ∈ [0.20,0.30]` and `theta_wp ∈ [0.08,0.15]` independently produces `PAW < 0.10` one time in five. Sampling PAW directly, or using conditional sampling, would eliminate this waste.
+
+**4. The aeration-threshold metric is statistically meaningless.** Only **6/2,344** held-out rows fell within ±0.02 of θ_aer. The reported ×0.71 / ×0.36 ratios are computed on 6 rows and must not be cited as evidence.
+
+---
+
+## DECISION RECORD 004 — Sprint 2 closed
+
+| Item | Decision |
+|---|---|
+| **1. Objective** | Determine whether an ML surrogate is justified for the 2-layer soil-water primitive, using pre-declared thresholds |
+| **2. Competing proposals** | (a) Flux prediction + conservation-aware update; (b) direct multi-output state regression; (c) no surrogate — simulator in production |
+| **3. Specialist review** | **Turing:** architecture (a) validated, 9× better state fidelity than (b). **Aris:** stress-transition errors acceptable (×1.75), but aeration region is unsampled (n=6). **Murphy:** three FAILs, one vacuous PASS, one degenerate output |
+| **4. Adversarial findings** | Speedup only 5×; 31.6–40.9% raw physics violations; 117.6 mm max error in the deluge template; RO>0 in 0.01% of training rows |
+| **5. Verification** | Executed. Hashes: core `5ec4698a29f060d3…`, benchmark `56a9a6174c6aa572…`. Logs `sprint1_log.json`, `sprint2_log.json` |
+| **6. Decision** | **REJECT the ML surrogate for production. RETAIN the exact simulator as the calculation engine.** Adopt the flux + conservation-aware update pattern as the *standing architecture* should a surrogate ever be needed. **REJECT** the runoff MAE pass as vacuous |
+| **7. Uncertainty** | Pilot scale only (959/293 scenarios vs the 5,000/1,000 target) — reduced for execution-time budget, **not** a claim of sufficient coverage. Aeration-threshold behaviour untested (n=6). D2 RMSE reduction below gate may reflect small flux magnitude rather than genuine model failure |
+| **8. Next experiment** | **Fix the generator, not the model.** (i) Add a runoff-producing rainfall regime so `RO>0` appears in ≥5% of training rows; (ii) replace independent θ_fc/θ_wp sampling with direct PAW sampling to cut the 20% G2 rejection; (iii) stratify sampling to guarantee ≥200 rows near θ_aer; (iv) re-run the benchmark at full 5,000/1,000 scale |
+
+**Standing caveat, recorded in both logs:** every number above measures **simulator emulation**. None of it establishes real-world agricultural validity. No field data was used.
+
+---
+
+**Dr. Turing:** "I argued for scale and surrogates. The benchmark beat me, and it beat me on my own criterion. 28,000 steps/second means the exact physics engine finishes a full decision sweep in five seconds. Adding a 9 MB model, a repair layer, and a 31.6% physics-violation rate to save four seconds is negative-value engineering. I withdraw the surrogate proposal."
+
+**Dr. Aris:** "What concerns me is not the surrogate. It is that our synthetic generator almost never produces runoff. We built a monsoon-region farming system whose weather model cannot generate a storm large enough to overflow a 72 mm pore space. That is a scientific defect in the generator, and it would have propagated silently into every downstream model."
+
+**Murphy:** "And note what the harness bugs did. A wrong column index reported 99.81% bound violations; an identity check reported three passing tests as failures. Neither was caught by reasoning. Both were caught by running the code. That is the argument for your protocol."
+
+---
+
+**Moderator:** Sprint 1 is closed with reproducible source, hashes, and machine logs. Sprint 2 is closed with a **negative result on the surrogate** and **two confirmed generator defects**.
+
+The next milestone is unambiguous: **repair the synthetic generator** (runoff regime, PAW sampling, aeration stratification), then re-benchmark at full scale. Shall the team proceed with the generator repair, or would you prefer we first record the simulator as the locked production engine and move to the Knowledge Graph ontology?
