@@ -58,3 +58,7 @@ The latest Qwen response says the generator was repaired using PAW-based soil sa
 The full submitted response is preserved in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`.
 
 **Independent status:** these remain claims from a report, not independently verified execution in this repository. The source implementation, timing script, scenario configuration, raw logs, and real-world measurements still need to be committed and rerun. The source freeze can be treated as an intended release label only when it points to an actual committed source revision and its tests.
+
+## 2026-10-14 — Qwen Sprint 2 closure and multi-hat review
+
+The user supplied Qwen's Sprint 2 closure report again and requested professional/deep-domain review hats, subagents and adversarial debate strategies. The report is preserved in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`. The review disposition is in `docs/decisions/DR-005-qwen-sprint2-closure-adversarial-review.md`; reusable role and debate instructions are in `docs/protocol/agent-hats-and-debate-template.md`.

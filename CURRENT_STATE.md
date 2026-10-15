@@ -63,3 +63,11 @@ The latest response claims that:
 **Verification status: reported, not independently reproduced.** The full response is archived in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`. The actual source code, sampler, scenario definitions, timing harness, and raw execution logs have not been supplied as files in this repository. Until they are committed and reproducibly run, `v1.0.0-ref` is a reported label rather than a verified release artifact.
 
 The project can design the knowledge ontology in parallel, but the simulator must not be described as agriculturally validated or used to make confident field recommendations until suitable calibration and independent evaluation are completed.
+
+## Latest review update — Qwen Sprint 2 closure
+
+The latest Qwen closure report is preserved in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`. Its direction—keep the explicit simulator as the reference and defer a surrogate until there is a demonstrated workload need—is accepted provisionally. Its execution metrics and claims remain reported, not independently verified, because the source code, benchmark harness, scenario definitions and raw logs are not included here.
+
+The adversarial review is recorded in `docs/decisions/DR-005-qwen-sprint2-closure-adversarial-review.md`. In particular, PAW-derived theta ordering is necessary but not sufficient to establish hydraulic consistency, named scenario families do not establish coverage without definitions and assertions, and a freeze label requires a tagged code artifact. Calibration gates field-validity claims and farmer-facing use; it need not block parallel ontology/provenance and data-inventory work.
+
+Use `docs/protocol/agent-hats-and-debate-template.md` for future structured reviews. The hats are perspectives unless separately invoked agents are actually used; never present simulated debate as independent execution or expose hidden private chain-of-thought.
