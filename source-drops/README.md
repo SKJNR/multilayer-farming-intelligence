@@ -9,3 +9,5 @@ Files in this directory preserve AI-submitted reports and user-provided source m
 - `qwen-sprint2-closure-generator-repair-and-calibration-gate.md`: latest Qwen response archived on 2026-10-14, claiming a timing audit, PAW-based soil sampling, explicit scenario-family coverage, reference freeze as `v1.0.0-ref`, deferred surrogates, and a real-world calibration gate.
 
 The actual source code and raw logs cited in these reports were not included with the reports in this package. Read the current-state file and decision records for the independent review status and outstanding requirements.
+
+- `argon-pot-audit-submitted-2026-10-14.md`: Argon-supplied PoT/PAL audit summary, with independent checks separated from unverified claims and follow-up requirements.

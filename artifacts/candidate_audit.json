@@ -1,0 +1,58 @@
+{
+  "status": "locally executed candidate audit; not historical v1.0.0-ref reproduction",
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "timing": {
+    "steps_per_rep": 10000,
+    "repetitions": 5,
+    "seconds": [
+      0.4669576070000119,
+      0.4905091080000261,
+      0.4938067379999893,
+      0.5383608649999871,
+      0.49323478299999124
+    ],
+    "mean_seconds": 0.4965738202000011,
+    "std_seconds_population": 0.02314676584240854,
+    "microseconds_per_step": 49.657382020000114
+  },
+  "soil_prior_count": 1000,
+  "soil_prior_ordering_passed": true,
+  "identifiability_screen": {
+    "n": 256,
+    "seed": 42,
+    "design": "scrambled Sobol; illustrative bounds",
+    "ksat_range_mm_day": [
+      5.0,
+      100.0
+    ],
+    "hardpan_range": [
+      0.05,
+      1.0
+    ],
+    "product_range_observed": [
+      0.6262431896230126,
+      97.37986898327884
+    ],
+    "local_jacobian": [
+      [
+        0.5000000001587068,
+        39.99999999990678
+      ]
+    ],
+    "jacobian_rank": 1,
+    "singular_values": [
+      40.003124877847995
+    ],
+    "interpretation": "One product observation cannot separately identify Ksat and hardpan. More independent observables or priors are required.",
+    "evidence_class": "Synthetic_Identifiability_Diagnostic"
+  },
+  "limitations": [
+    "synthetic priors only",
+    "not field calibrated",
+    "not a full published PTF",
+    "no agronomic recommendations"
+  ]
+}

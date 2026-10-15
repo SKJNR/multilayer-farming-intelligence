@@ -71,3 +71,14 @@ The latest Qwen closure report is preserved in `source-drops/qwen-sprint2-closur
 The adversarial review is recorded in `docs/decisions/DR-005-qwen-sprint2-closure-adversarial-review.md`. In particular, PAW-derived theta ordering is necessary but not sufficient to establish hydraulic consistency, named scenario families do not establish coverage without definitions and assertions, and a freeze label requires a tagged code artifact. Calibration gates field-validity claims and farmer-facing use; it need not block parallel ontology/provenance and data-inventory work.
 
 Use `docs/protocol/agent-hats-and-debate-template.md` for future structured reviews. The hats are perspectives unless separately invoked agents are actually used; never present simulated debate as independent execution or expose hidden private chain-of-thought.
+
+## 2026-10-14 — Candidate executable audit package
+
+A new audit-candidate Python package has been added under `simulation/`, with deterministic tests, a Sobol-based illustrative parameter design, an explicit operator sequence, per-step mass residuals, an identifiability diagnostic, an environment-specific audit JSON, and a SHA-256 manifest. `python -m pytest -q` passed 8 tests in the current sandbox. This package is **not** the recovered historical `v1.0.0-ref`; the original executable source and benchmark harness are still missing. The generator is not a full validated Saxton–Rawls/Rosetta PTF, and no field calibration or real-world validation is claimed. See `docs/decisions/DR-006-multi-agent-adversarial-pot-audit.md` and `README-SIMULATION-PACKAGE.md`.
+
+
+## 2026-10-14 — Argon PoT audit reconciliation
+
+Argon's submitted audit summary is preserved at `source-drops/argon-pot-audit-submitted-2026-10-14.md`. One result was independently reproduced against the exact archived snippet: the shown unscaled LHS code gives 15/100 valid, while applying the stated affine registry bounds gives 100/100; neither matches the archived 86/100. The PAW rejection geometry is analytically 17.857%; the archived `223/1200` count is 18.583%, not the paired 20.1% claim. The exact source/run should be recovered before asserting which historical execution occurred.
+
+Other Argon rates/timings (16.4% aeration-margin violations, 10.2% texture/Ksat mismatch, 0.0245s timing, >15% operator-splitting effect, and the full calibration identifiability scenario) remain unverified because the exact artifacts are missing. Treat the papaya waterlogging/Phytophthora sequence as a proposed adversarial test, not a validated prediction. Ontology/provenance work can proceed in parallel with recovery and simulator verification.

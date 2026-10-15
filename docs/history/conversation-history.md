@@ -62,3 +62,8 @@ The full submitted response is preserved in `source-drops/qwen-sprint2-closure-g
 ## 2026-10-14 — Qwen Sprint 2 closure and multi-hat review
 
 The user supplied Qwen's Sprint 2 closure report again and requested professional/deep-domain review hats, subagents and adversarial debate strategies. The report is preserved in `source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`. The review disposition is in `docs/decisions/DR-005-qwen-sprint2-closure-adversarial-review.md`; reusable role and debate instructions are in `docs/protocol/agent-hats-and-debate-template.md`.
+
+
+## 2026-10-14 — Argon audit and candidate package reconciliation
+
+The user supplied Argon's repository/PoT audit. Added the review summary to `source-drops/argon-pot-audit-submitted-2026-10-14.md` and reconciled claims in DR-006. Independently reran the archived LHS snippet: unscaled gives 15/85; affine-scaled stated bounds give 100/0, neither the claimed 86/14. Analytically checked PAW rejection probability `5/28 ≈ 17.857%`; `223/1200 = 18.583%`, so the archived `20.1%` pairing is inconsistent. Other external rates, timings, operator-splitting effect, and agronomic failure scenario remain unverified until source artifacts are recovered. Reaffirmed parallel KG/provenance work and no farmer-facing validation claim.

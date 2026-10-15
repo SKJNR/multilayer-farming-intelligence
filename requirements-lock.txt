@@ -1,0 +1,4 @@
+# Exact package versions observed in the sandbox run; platform-specific wheels may vary.
+numpy==2.3.5
+scipy==1.17.0
+pytest==9.0.2
