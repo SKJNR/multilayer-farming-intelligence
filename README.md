@@ -2,21 +2,23 @@
 
 **Purpose:** one version-controlled source of truth for architecture, scientific assumptions, experiments, decision records, and peer-review history for the multilayer farming intelligence work.
 
-> **Important status note:** This repository begins as a documentation and provenance package. It does **not** include the actual soil-water simulator source code, test harnesses, raw scenario datasets, or machine-generated logs described in some AI-submitted reports. Claims about those executions remain attributed reports until the underlying artifacts are added and independently reproduced.
+> **Important status note:** The repository now contains a **new audit-candidate** simulator under `simulation/`, tests, scripts, and candidate audit artifacts. It is **not** a reconstruction of the historical `v1.0.0-ref` claimed in AI-submitted reports. Historical source, original benchmark harness, and raw field observations remain missing. Candidate software checks do not establish physical validity, calibration, or farmer readiness; read `docs/validation/real-world-readiness-roadmap.md`.
 
 ## Start here
 
 1. [`CURRENT_STATE.md`](CURRENT_STATE.md) — what is currently decided, what is only proposed, and what remains unverified.
-2. [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md) — target architecture.
-3. [`docs/protocol/multi-agent-review-protocol.md`](docs/protocol/multi-agent-review-protocol.md) — standing review process.
-4. [`docs/protocol/evidence-and-reproducibility.md`](docs/protocol/evidence-and-reproducibility.md) — rules for claims, code execution, and provenance.
-5. [`docs/decisions/`](docs/decisions/) — decision records and their current status.
-6. [`docs/history/conversation-history.md`](docs/history/conversation-history.md) — concise timeline of the debate so far.
-7. [`source-drops/`](source-drops/) — verbatim source text files provided in the conversation. These are archived inputs, not automatically verified results.
+2. [`docs/validation/real-world-readiness-roadmap.md`](docs/validation/real-world-readiness-roadmap.md) — staged evidence gates from synthetic prototype to field evaluation.
+3. [`docs/validation/field-data-protocol.md`](docs/validation/field-data-protocol.md) and [`templates/field-pilot/`](templates/field-pilot/) — field measurements and normalized CSV templates.
+4. [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md) — target architecture.
+5. [`docs/protocol/multi-agent-review-protocol.md`](docs/protocol/multi-agent-review-protocol.md) and [`docs/protocol/agent-hats-and-debate-template.md`](docs/protocol/agent-hats-and-debate-template.md) — specialist hats, adversarial review, and evidence rules.
+6. [`docs/protocol/evidence-and-reproducibility.md`](docs/protocol/evidence-and-reproducibility.md) — claims, execution, and provenance.
+7. [`docs/decisions/`](docs/decisions/) — decision records and their status.
+8. [`docs/history/conversation-history.md`](docs/history/conversation-history.md) — concise timeline of the debate.
+9. [`source-drops/`](source-drops/) — archived reports supplied in conversation; inputs, not automatically verified results.
 
 ## Current high-level decision
 
-- Retain a simple layered soil-water simulator as a **reference prototype** while its implementation and tests are assembled in this repository.
+- Retain the explicit two-layer simulator in `simulation/` as a **candidate reference prototype** for software and synthetic experiments; it is not field-calibrated.
 - Do not build an ML surrogate until a measured workload demonstrates a material need. AI-submitted benchmark reports say the surrogate was slower to develop, provided limited speed benefit, and produced unacceptable raw constraint violations; see [`docs/decisions/DR-004-surrogate-benchmark.md`](docs/decisions/DR-004-surrogate-benchmark.md).
 - Repair and systematically test synthetic scenario coverage before using generated datasets for model training.
 - Do not claim agricultural validity until parameters and model behaviour have been evaluated against relevant real observations.
@@ -28,11 +30,11 @@ GitHub is the **shared memory store**; it does not automatically synchronize pri
 
 Copy [`templates/START-OF-SESSION-PROMPT.md`](templates/START-OF-SESSION-PROMPT.md) into a new ChatGPT/Qwen conversation. Use [`templates/END-OF-SESSION-CHECKLIST.md`](templates/END-OF-SESSION-CHECKLIST.md) before accepting any claimed experiment.
 
-## Suggested repository setup
+## Repository visibility and sensitive data
 
-Keep the actual GitHub repository **private initially** because this is active project IP. Create `multilayer-farming-intelligence` in GitHub, then upload or push these files. Grant access only to accounts or integrations that should read it. If a model cannot access a private repository, either connect that model to the repo or explicitly give it the relevant files. Making it public improves link-based access but exposes the project to everyone.
+The repository was verified as **public** when this snapshot was reviewed. Treat every committed file as public. Do not commit farmer names, phone numbers, exact identifiable farm coordinates, consent forms, credentials, or non-public field records. Use pseudonymous IDs and keep identifiable data in a separately controlled store. If active project IP or field confidentiality requires a private repository, change visibility in GitHub settings after reviewing collaborators/integrations; do not assume the current repository is private.
 
-See [`docs/protocol/github-sharing-workflow.md`](docs/protocol/github-sharing-workflow.md) for setup and ongoing operations.
+See [`docs/protocol/github-sharing-workflow.md`](docs/protocol/github-sharing-workflow.md) for session and repository operations.
 
 ## Repository truth labels
 
@@ -46,8 +48,8 @@ Use these labels in documents and issues:
 
 ## Scope note
 
-This repository captures the currently available multilayer farming / synthetic-data conversation and the three text files supplied with it. It cannot automatically export every other ChatGPT or Qwen conversation, hidden model state, or unrelated prior project discussion. Add those conversations or relevant summaries explicitly if they should become part of this source of truth.
+The repository preserves committed reports, decisions, code, and test artifacts; it cannot automatically export private ChatGPT/Qwen histories or hidden model state. Add any future report needed for provenance as a source artifact and label it as reported until independently reproduced.
 
 ## Latest recorded update
 
-The latest submitted Qwen report is archived in [`source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`](source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md). It claims generator repairs and a `v1.0.0-ref` freeze, but the underlying source and logs are not present here, so those execution claims remain unverified. See [`CURRENT_STATE.md`](CURRENT_STATE.md) and [DR-004.1](docs/decisions/DR-0041-generator-coverage-and-reference-freeze.md) for current status.
+The latest submitted Qwen report is archived in [`source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`](source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md). Its reported historical `v1.0.0-ref` source/harness and raw run artifacts have not been recovered. The new candidate is separately identified, and readiness requirements are tracked in `docs/validation/real-world-readiness-roadmap.md` and DR-007.

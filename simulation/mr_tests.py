@@ -55,3 +55,46 @@ def test_invalid_soil_rejected() -> None:
     except ValueError:
         return
     raise AssertionError("invalid hydraulic ordering should fail")
+
+
+def test_nonfinite_initial_theta_rejected() -> None:
+    for bad_value in (float("nan"), float("inf"), float("-inf")):
+        try:
+            TwoLayerSoilWaterModel(initial_theta=(bad_value, 0.25))
+        except ValueError:
+            continue
+        raise AssertionError(f"non-finite initial theta was accepted: {bad_value}")
+
+
+def test_nonfinite_soil_parameter_rejected() -> None:
+    try:
+        TwoLayerSoilWaterModel(SoilParameters(ksat1_mm_day=float("nan")))
+    except ValueError:
+        return
+    raise AssertionError("non-finite Ksat was accepted")
+
+
+def test_aeration_threshold_must_exceed_field_capacity() -> None:
+    try:
+        TwoLayerSoilWaterModel(SoilParameters(theta_aer1=0.20))
+    except ValueError:
+        return
+    raise AssertionError("theta_aer below theta_fc was accepted")
+
+
+def test_irrigation_is_explicit_and_conserves_water() -> None:
+    model = TwoLayerSoilWaterModel()
+    before = float(model.storage.sum())
+    out = model.step(0, 0, 0, 0, irrigation_mm=20)
+    assert out["rainfall_mm"] == 0
+    assert out["irrigation_mm"] == 20
+    assert abs(out["mass_balance_residual_mm"]) < 1e-8
+    assert float(model.storage.sum()) <= before + 20 + 1e-9
+
+
+def test_negative_irrigation_rejected() -> None:
+    try:
+        TwoLayerSoilWaterModel().step(0, 0, 0, 0, irrigation_mm=-1)
+    except ValueError:
+        return
+    raise AssertionError("negative irrigation was accepted")

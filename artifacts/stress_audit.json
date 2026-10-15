@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "evidence_class": "Synthetic_Software_Stress_Test_Not_Field_Validation",
+  "seed": 20261015,
+  "profiles_requested": 2000,
+  "days_per_profile": 30,
+  "steps_checked": 60000,
+  "failure": null,
+  "max_abs_profile_mass_residual_mm": 1.4210854715202004e-13,
+  "max_observed_flux_mm_per_day": {
+    "runoff_mm": 137.69858400648522,
+    "drainage_l1_l2_mm": 124.28002406945981,
+    "deep_drainage_mm": 108.40652180396684
+  },
+  "design_note": "Each generated prior is applied identically to both layers; this tests software bounds/accounting, not vertical soil-profile realism.",
+  "limitations": [
+    "illustrative priors",
+    "no field observations",
+    "no calibrated hydraulic curves",
+    "not an agronomic validation"
+  ]
+}

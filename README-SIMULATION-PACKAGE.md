@@ -12,8 +12,8 @@ The soil generator is texture-coupled and enforces basic hydraulic ordering and 
 - `simulation/soil_generator.py`: deterministic texture-simplex prior generator.
 - `simulation/identifiability.py`: Sobol design and exact product-confounding diagnostic for `Ksat × hardpan`.
 - `simulation/mr_tests.py`: metamorphic checks MR1–MR5.
-- `scripts/run_audit.py`: timing, prior validity and identifiability report.
-- `scripts/write_sha256_manifest.py`: writes `SHA256SUMS.txt` for tracked source/artifact files.
+- `scripts/run_audit.py` and `scripts/run_stress_audit.py`: timing, prior validity and identifiability report.
+- `scripts/write_sha256_manifest.py`: writes `SHA256SUMS.txt` for repository files while excluding volatile caches.
 
 ## Run
 
@@ -21,6 +21,7 @@ The soil generator is texture-coupled and enforces basic hydraulic ordering and 
 python -m pip install -r requirements-lock.txt
 python -m pytest -q
 python scripts/run_audit.py
+python scripts/run_stress_audit.py
 python scripts/write_sha256_manifest.py
 ```
 
@@ -29,3 +30,6 @@ The generated `artifacts/candidate_audit.json` captures the local runtime enviro
 ## Evidence labels
 
 All generated soil parameters and simulator states are synthetic. Mass-balance closure checks bookkeeping; it does not validate the physical correctness of the flux laws. No field validation, parameter calibration, or suitability for crop-management decisions is claimed.
+
+
+The `step()` method accepts `rainfall_mm` and keyword-only `irrigation_mm` separately. It still does not model event-intensity infiltration limits or derive evaporation/transpiration demands from meteorology/crop phenology. Read `docs/validation/real-world-readiness-roadmap.md` before connecting field observations.

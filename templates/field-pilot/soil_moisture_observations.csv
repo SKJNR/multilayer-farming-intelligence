@@ -1,0 +1,1 @@
+observation_id,timestamp_local,timezone,site_id,plot_id,horizon_id,sensor_id,measurement_depth_cm,theta_vwc_m3_m3,measurement_method,calibration_id,estimated_measurement_sd_m3_m3,replicate_id,quality_flag,missingness_flag,independent_check_method,source_record_id,notes,evidence_class,protocol_version

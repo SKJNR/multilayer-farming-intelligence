@@ -33,6 +33,14 @@ class SoilParameters:
     drainage_shape: float = 5.0
 
     def validate(self) -> None:
+        numeric_values = np.asarray([
+            self.z1_mm, self.z2_mm,
+            self.theta_sat1, self.theta_sat2, self.theta_fc1, self.theta_fc2,
+            self.theta_wp1, self.theta_wp2, self.theta_aer1, self.theta_aer2,
+            self.ksat1_mm_day, self.ksat2_mm_day, self.hardpan_factor, self.drainage_shape,
+        ], dtype=float)
+        if not np.all(np.isfinite(numeric_values)):
+            raise ValueError("All soil parameters must be finite")
         if self.z1_mm <= 0 or self.z2_mm <= 0:
             raise ValueError("Layer depths must be positive")
         for i in (1, 2):
@@ -42,8 +50,8 @@ class SoilParameters:
             aer = getattr(self, f"theta_aer{i}")
             if not (0 <= wp < fc < sat <= 1):
                 raise ValueError(f"Layer {i} must satisfy 0 <= theta_wp < theta_fc < theta_sat <= 1")
-            if not (wp < aer < sat):
-                raise ValueError(f"Layer {i} theta_aer must be between theta_wp and theta_sat")
+            if not (fc < aer < sat):
+                raise ValueError(f"Layer {i} must satisfy theta_fc < theta_aer < theta_sat")
         if self.ksat1_mm_day < 0 or self.ksat2_mm_day < 0:
             raise ValueError("Ksat cannot be negative")
         if not 0 <= self.hardpan_factor <= 1:
@@ -55,8 +63,8 @@ class SoilParameters:
 class TwoLayerSoilWaterModel:
     """Daily two-layer bucket model with explicit flux order.
 
-    Sequence per step: (1) add rainfall to layer 1 up to saturation and assign
-    overflow to runoff; (2) drain layer 1 above field capacity to layer 2,
+    Sequence per step: (1) add rainfall plus irrigation to layer 1 up to
+    saturation and assign overflow to runoff; (2) drain layer 1 above field capacity to layer 2,
     limited by Ksat/hardpan and receiver capacity; (3) drain layer 2 above FC;
     (4) compute stress from the post-rain/post-drain state; (5) allocate layer-1
     available water proportionally across E, groundnut uptake and papaya uptake;
@@ -73,8 +81,9 @@ class TwoLayerSoilWaterModel:
         self.aer = np.array([self.soil.theta_aer1, self.soil.theta_aer2], dtype=float)
         self.ksat = np.array([self.soil.ksat1_mm_day, self.soil.ksat2_mm_day], dtype=float)
         theta = np.array(initial_theta if initial_theta is not None else self.fc, dtype=float)
-        if theta.shape != (2,) or np.any(theta < self.wp) or np.any(theta > self.sat):
-            raise ValueError("initial_theta must be two values within [theta_wp, theta_sat]")
+        if (theta.shape != (2,) or not np.all(np.isfinite(theta))
+                or np.any(theta < self.wp) or np.any(theta > self.sat)):
+            raise ValueError("initial_theta must be two finite values within [theta_wp, theta_sat]")
         self.storage = theta * self.z
 
     def get_theta(self) -> np.ndarray:
@@ -89,13 +98,15 @@ class TwoLayerSoilWaterModel:
     def step(self, rainfall_mm: float, evaporation_potential_mm: float,
              groundnut_transpiration_potential_mm: float,
              papaya_transpiration_potential_mm: float,
-             papaya_root_fraction: tuple[float, float] = (0.3, 0.7)) -> dict[str, Any]:
-        inputs = [rainfall_mm, evaporation_potential_mm, groundnut_transpiration_potential_mm,
-                  papaya_transpiration_potential_mm, *papaya_root_fraction]
+             papaya_root_fraction: tuple[float, float] = (0.3, 0.7),
+             *, irrigation_mm: float = 0.0) -> dict[str, Any]:
+        physical_inputs = [rainfall_mm, irrigation_mm, evaporation_potential_mm,
+                           groundnut_transpiration_potential_mm, papaya_transpiration_potential_mm]
+        inputs = [*physical_inputs, *papaya_root_fraction]
         if not all(np.isfinite(x) for x in inputs):
             raise ValueError("All inputs must be finite")
-        if min(inputs[:4]) < 0:
-            raise ValueError("Rainfall and potential demands must be non-negative")
+        if min(physical_inputs) < 0:
+            raise ValueError("Rainfall, irrigation and potential demands must be non-negative")
         roots = np.asarray(papaya_root_fraction, dtype=float)
         if roots.shape != (2,) or np.any(roots < 0) or roots.sum() <= 0:
             raise ValueError("papaya_root_fraction must contain two non-negative values with positive sum")
@@ -104,9 +115,11 @@ class TwoLayerSoilWaterModel:
         smax = self.sat * self.z
         smin = self.wp * self.z
 
-        # 1. Infiltration and runoff.
-        infil = min(float(rainfall_mm), max(0.0, smax[0] - self.storage[0]))
-        runoff = float(rainfall_mm) - infil
+        # 1. Infiltration and saturation-excess runoff. Irrigation is an explicit
+        # top-boundary input; event/intensity infiltration limits are not modeled.
+        water_input = float(rainfall_mm) + float(irrigation_mm)
+        infil = min(water_input, max(0.0, smax[0] - self.storage[0]))
+        runoff = water_input - infil
         self.storage[0] += infil
 
         # 2. Drainage from layer 1 to layer 2; receiver capacity is explicit.
@@ -146,8 +159,9 @@ class TwoLayerSoilWaterModel:
         self.storage = np.clip(self.storage, smin, smax)
         new_total = float(self.storage.sum())
         outputs = e_actual + ug1 + up1 + up2 + d2 + runoff
-        residual = old_total + float(rainfall_mm) - new_total - outputs
+        residual = old_total + float(rainfall_mm) + float(irrigation_mm) - new_total - outputs
         return {
+            "rainfall_mm": float(rainfall_mm), "irrigation_mm": float(irrigation_mm),
             "runoff_mm": runoff, "evaporation_actual_mm": e_actual,
             "groundnut_uptake_l1_mm": ug1, "papaya_uptake_l1_mm": up1,
             "papaya_uptake_l2_mm": up2, "drainage_l1_l2_mm": d12,

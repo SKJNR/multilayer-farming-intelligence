@@ -1,0 +1,1 @@
+date_local,timezone,site_id,plot_id,rainfall_mm,irrigation_mm,irrigation_method,et0_mm,et0_method,air_temp_min_c,air_temp_max_c,relative_humidity_pct,wind_speed_m_s,solar_radiation_mj_m2_day,rain_source_id,weather_source_id,irrigation_record_id,missingness_flag,quality_flag,notes,evidence_class,protocol_version
