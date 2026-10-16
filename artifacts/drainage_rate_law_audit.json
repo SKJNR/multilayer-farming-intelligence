@@ -1,0 +1,36 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "evidence_class": "Reproduced_Synthetic_Code_Diagnostic_Not_Field_Evidence",
+  "source": "simulation/agrisim_core.py + simulation/soil_generator.py",
+  "seed": 20261015,
+  "profiles": 2000,
+  "days_per_profile": 30,
+  "steps": 60000,
+  "steps_d12_flux_above_ksat_scale": 17073,
+  "steps_d2_flux_above_ksat_scale": 26804,
+  "fraction_d12_steps_above_ksat_scale": 0.28455,
+  "fraction_d2_steps_above_ksat_scale": 0.4467333333333333,
+  "max_d12_ratio_example": {
+    "ratio_to_ksat": 4.737123041171676,
+    "profile_index": 1269,
+    "day_index": 4,
+    "flux_mm_day": 48.44243781139129,
+    "ksat_mm_day": 10.226130372879142,
+    "theta_after_step": 0.2729654316333737
+  },
+  "max_d2_ratio_example": {
+    "ratio_to_ksat": 5.027670574770526,
+    "profile_index": 213,
+    "day_index": 12,
+    "flux_mm_day": 19.0412216679798,
+    "ksat_mm_day": 3.7872850626950405,
+    "theta_after_step": 0.4249186972830004
+  },
+  "interpretation": "The exponential drainage multiplier can produce daily flux greater than the numeric Ksat parameter. This is not, alone, proof of physical impossibility because Darcy flux depends on hydraulic gradient; however, the bucket code does not explicitly calculate or report that gradient. The rate law, units, intended meaning, and plausible domain require a domain-reviewed equation before field use.",
+  "limitations": [
+    "illustrative priors only",
+    "same prior mapped to both layers",
+    "no observed hydraulic-head gradient",
+    "not field validation"
+  ]
+}
