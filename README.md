@@ -52,4 +52,4 @@ The repository preserves committed reports, decisions, code, and test artifacts;
 
 ## Latest recorded update
 
-The latest submitted Qwen report is archived in [`source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`](source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md). Its reported historical `v1.0.0-ref` source/harness and raw run artifacts have not been recovered. The new candidate is separately identified, and readiness requirements are tracked in `docs/validation/real-world-readiness-roadmap.md` and DR-007.
+The latest submitted Qwen report is archived in [`source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md`](source-drops/qwen-sprint2-closure-generator-repair-and-calibration-gate.md). Its reported historical `v1.0.0-ref` source/harness and raw run artifacts have not been recovered. The new candidate is separately identified, readiness requirements are tracked in `docs/validation/real-world-readiness-roadmap.md` and DR-007, and DR-008 records the adversarial review of the drainage-rate law before calibration.
