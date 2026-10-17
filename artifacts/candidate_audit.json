@@ -1,29 +1,29 @@
 {
-  "status": "locally executed candidate audit; not historical v1.0.0-ref reproduction",
-  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
-  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
-  "numpy": "2.3.5",
-  "scipy": "1.17.0",
+  "status": "v2.0 universal multi-strata + patched 2-layer audit",
+  "python": "3.12.13 (main, May 10 2026, 19:35:37) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
   "timing": {
     "steps_per_rep": 10000,
     "repetitions": 5,
     "seconds": [
-      0.5452666730000146,
-      0.5860016880000103,
-      0.477632414000027,
-      0.4917970770000011,
-      0.48091494800007695
+      0.4965316999987408,
+      0.49375030000010156,
+      0.4919268999983615,
+      0.5065802000026451,
+      0.5226350999982969
     ],
-    "mean_seconds": 0.516322560000026,
-    "std_seconds_population": 0.04253250112001173,
-    "microseconds_per_step": 51.6322560000026
+    "mean_seconds": 0.5022848399996291,
+    "std_seconds_population": 0.011364920708144925,
+    "microseconds_per_step": 50.22848399996291
   },
   "soil_prior_count": 1000,
   "soil_prior_ordering_passed": true,
   "identifiability_screen": {
     "n": 256,
     "seed": 42,
-    "design": "scrambled Sobol; illustrative bounds",
+    "design": "scrambled Sobol + full 30-day trajectory SVD",
     "ksat_range_mm_day": [
       5.0,
       100.0
@@ -46,13 +46,39 @@
     "singular_values": [
       40.003124877847995
     ],
-    "interpretation": "One product observation cannot separately identify Ksat and hardpan. More independent observables or priors are required.",
+    "trajectory_identifiability": {
+      "dry_spell_theta1_only_rank": 3,
+      "dry_spell_singular_values": [
+        4.237666,
+        0.97377,
+        3.1e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "wet_storm_theta1_only_rank": 4,
+      "wet_storm_theta1_singular_values": [
+        4.434004,
+        0.520235,
+        0.004066,
+        0.00038,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "wet_storm_dual_depth_theta1_theta2_rank": 5,
+      "wet_storm_dual_depth_singular_values": [
+        4.601376,
+        0.597883,
+        0.063847,
+        0.000552,
+        0.000113,
+        0.0,
+        0.0
+      ]
+    },
+    "interpretation": "One product observation cannot separately identify Ksat and hardpan. Dual-depth wet-storm + dry-down windows with fixed horizon depths are required.",
     "evidence_class": "Synthetic_Identifiability_Diagnostic"
-  },
-  "limitations": [
-    "synthetic priors only",
-    "not field calibrated",
-    "not a full published PTF",
-    "no agronomic recommendations"
-  ]
+  }
 }

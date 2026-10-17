@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.0.0",
+  "methods": {
+    "Flat_Bare_NoPond": {
+      "method_id": "Flat_Bare_NoPond",
+      "topography_mode": "flat",
+      "mound_area_frac": 0.7,
+      "mound_runoff_shed_frac": 0.0,
+      "mulch_evap_factor": 1.0,
+      "subsoiling_conductance_mult": 1.0,
+      "drip_irrigation_efficiency": 0.85
+    },
+    "MoundTrench_Mulch_Subsoiled_PondDrip": {
+      "method_id": "MoundTrench_Mulch_Subsoiled_PondDrip",
+      "topography_mode": "mound_trench",
+      "mound_area_frac": 0.7,
+      "mound_runoff_shed_frac": 0.45,
+      "mulch_evap_factor": 0.6,
+      "subsoiling_conductance_mult": 1.4,
+      "drip_irrigation_efficiency": 0.92
+    }
+  }
+}
