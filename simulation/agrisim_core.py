@@ -46,6 +46,9 @@ class TwoLayerSoilWaterModel:
         self.aer = np.array([params.theta_aer1, params.theta_aer2], dtype=float)
         self.storage = np.array(initial_theta, dtype=float) * self.z
 
+    def get_theta(self) -> np.ndarray:
+        return self.storage / self.z
+
     def step(
         self,
         rainfall_mm: float,
@@ -53,6 +56,7 @@ class TwoLayerSoilWaterModel:
         guild1_transpiration_potential_mm: float = 5.0,
         guild2_transpiration_potential_mm: float = 8.0,
         roots: tuple[float, float] = (0.3, 0.7),
+        irrigation_mm: float = 0.0,
     ) -> dict[str, float]:
         p = self.params
         s_max = self.sat * self.z
@@ -60,8 +64,9 @@ class TwoLayerSoilWaterModel:
         s0 = self.storage.copy()
 
         # 1. Surface infiltration and saturation-excess runoff
-        infil = min(rainfall_mm, max(0.0, s_max[0] - self.storage[0]))
-        runoff = rainfall_mm - infil
+        water_input = float(rainfall_mm) + float(irrigation_mm)
+        infil = min(water_input, max(0.0, s_max[0] - self.storage[0]))
+        runoff = water_input - infil
         self.storage[0] += infil
         theta1_pre = self.storage[0] / self.z[0]
         theta2_pre = self.storage[1] / self.z[1]
@@ -109,15 +114,21 @@ class TwoLayerSoilWaterModel:
         assert np.all(self.storage <= s_max + 1e-9), f"Storage above saturation: {self.storage}"
 
         ds = float(np.sum(self.storage - s0))
-        net = rainfall_mm - runoff - d2 - e_act - ug1 - up1 - up2
+        net = water_input - runoff - d2 - e_act - ug1 - up1 - up2
         return {
+            "rainfall_mm": float(rainfall_mm),
+            "irrigation_mm": float(irrigation_mm),
             "runoff_mm": float(runoff),
             "drainage_l1_l2_mm": float(d12),
             "deep_drainage_mm": float(d2),
             "evaporation_mm": float(e_act),
+            "evaporation_actual_mm": float(e_act),
             "guild1_uptake_mm": float(ug1),
+            "groundnut_uptake_l1_mm": float(ug1),
             "guild2_uptake_l1_mm": float(up1),
+            "papaya_uptake_l1_mm": float(up1),
             "guild2_uptake_l2_mm": float(up2),
+            "papaya_uptake_l2_mm": float(up2),
             "fw1": fw1,
             "fa1": fa1,
             "fw2": fw2,

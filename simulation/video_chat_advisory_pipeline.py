@@ -20,8 +20,10 @@ Stage 3 (`run_video_chat_multilayer_advisor`):
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
-import json
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 import numpy as np
 
 from .multimodal_video_soft_sensor import (
@@ -63,6 +65,8 @@ def extract_cv_metrics_from_video_file(video_path: str | Path, max_frames: int =
     path = Path(video_path)
     if not path.exists():
         raise FileNotFoundError(f"Video file not found: {path}")
+    if cv2 is None:
+        raise ImportError("OpenCV ('cv2') is required to extract frames from video files. Please install opencv-python or opencv-python-headless.")
 
     cap = cv2.VideoCapture(str(path))
     total_frames = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 1)

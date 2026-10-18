@@ -6,11 +6,11 @@
   "days_per_profile": 30,
   "steps_checked": 60000,
   "failure": null,
-  "max_abs_profile_mass_residual_mm": 1.4210854715202004e-13,
+  "max_abs_profile_mass_residual_mm": 9.947598300641403e-14,
   "max_observed_flux_mm_per_day": {
-    "runoff_mm": 137.69858400648522,
-    "drainage_l1_l2_mm": 124.28002406945981,
-    "deep_drainage_mm": 108.40652180396684
+    "runoff_mm": 139.10478667891414,
+    "drainage_l1_l2_mm": 114.894775834996,
+    "deep_drainage_mm": 38.59114930720463
   },
   "design_note": "Each generated prior is applied identically to both layers; this tests software bounds/accounting, not vertical soil-profile realism.",
   "limitations": [
