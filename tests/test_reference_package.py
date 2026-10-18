@@ -102,6 +102,53 @@ def test_borderless_spatial_weather_and_canopy_pond_adapters():
     assert rs_ctx.observed_overstory_lai is not None and rs_ctx.observed_overstory_lai > 0.5
 
 
+def test_agronomic_sat_solver_and_soft_sensor():
+    from simulation.realtime_sat_edge_advisor import AgronomicSATSolver, parse_farmer_text_zero_llm_cost
+    from simulation.multimodal_video_soft_sensor import verify_youtube_yield_claim_against_physics
+
+    root = Path(__file__).resolve().parents[1]
+    crops_cfg = json.loads((root / "configs/crop_traits.json").read_text())["crops"]
+    methods_cfg = json.loads((root / "configs/agronomic_methods.json").read_text())["methods"]
+
+    def load_crop(cid: str) -> UniversalCropTraits:
+        d = dict(crops_cfg[cid])
+        d["pathogen_Tags"] = tuple(d["pathogen_Tags"])
+        return UniversalCropTraits(**d)
+
+    traits_map = {cid: load_crop(cid) for cid in crops_cfg}
+    methods_map = {mid: AgronomicMethodSpec(**methods_cfg[mid]) for mid in methods_cfg}
+    solver = AgronomicSATSolver(traits_map, methods_map)
+
+    # 1. Unviable: Papaya + Chilli on Flat land with storm ponding (shares Phytophthora and violates mound implication)
+    res_bad = solver.verify_assignment(
+        ("papaya", "chilli"), "Flat_Bare_NoPond", waterlogging_hours=30.0, require_legume=False, max_budget_per_ha=200000.0
+    )
+    assert not res_bad.satisfiable
+    assert any("C2_PATHOGEN_CLAUSE" in v for v in res_bad.violated_clauses)
+    assert any("C4_HYPOXIA_IMPLICATION" in v for v in res_bad.violated_clauses)
+
+    # 2. Viable: Papaya + Pigeonpea + Turmeric on Mound+Trench
+    res_good = solver.verify_assignment(
+        ("papaya", "pigeonpea", "turmeric"),
+        "MoundTrench_Mulch_Subsoiled_PondDrip",
+        waterlogging_hours=30.0,
+        require_legume=True,
+        max_budget_per_ha=250000.0,
+    )
+    assert res_good.satisfiable
+    assert any("IMP_MOUND_TRENCH" in imp for imp in res_good.active_implications)
+
+    # 3. Physics hype filter test: 45 t/ha biomass on 350 mm transpiration exceeds water ceiling
+    claim = verify_youtube_yield_claim_against_physics(45000.0, 350.0)
+    assert not claim["physically_plausible"]
+    assert claim["assigned_evidence_class"] == "REJECTED_PROMOTIONAL_OUTLIER"
+
+    # 4. Zero-LLM-cost text parser test
+    ctx = parse_farmer_text_zero_llm_cost("I have papaya and groundnut on flat land, water stands 24 hours after rain")
+    assert "papaya" in ctx.detected_existing_crops
+    assert ctx.reported_waterlogging_hours_after_storm == 24.0
+
+
 if __name__ == "__main__":
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -113,4 +160,6 @@ if __name__ == "__main__":
     print("[PASS] test_declarative_config_driven_universal_engine")
     test_borderless_spatial_weather_and_canopy_pond_adapters()
     print("[PASS] test_borderless_spatial_weather_and_canopy_pond_adapters")
-    print("\nALL 10/10 VERIFICATION SUITES PASSED.")
+    test_agronomic_sat_solver_and_soft_sensor()
+    print("[PASS] test_agronomic_sat_solver_and_soft_sensor")
+    print("\nALL 11/11 VERIFICATION SUITES PASSED.")
