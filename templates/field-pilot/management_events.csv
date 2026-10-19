@@ -1,0 +1,1 @@
+event_id,timestamp_local,timezone,site_id,plot_id,event_type,crop_species,cultivar,crop_stage,quantity,value_unit,method,observed_condition,diagnosis_source_id,farmer_action_id,sensor_maintenance_flag,source_record_id,notes,evidence_class,protocol_version

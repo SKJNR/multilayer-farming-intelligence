@@ -1,0 +1,31 @@
+name: Simulation candidate checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: simulation-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-and-stress:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-lock.txt
+      - name: Run regression and metamorphic tests
+        run: python -m pytest -q
+      - name: Run synthetic randomized stress audit
+        run: python scripts/run_stress_audit.py

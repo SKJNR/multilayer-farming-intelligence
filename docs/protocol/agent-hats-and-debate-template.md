@@ -33,6 +33,12 @@ Do not request or publish hidden private chain-of-thought. Ask each reviewer for
 8. **Decision record:** problem; options; specialist review; adversarial findings; verification; decision; uncertainty; next experiment.
 9. **Commit:** update `CURRENT_STATE.md`, decision record, source archive, tests/artifacts, and changelog; commit only what actually changed.
 
+## Adversarial pairing rule
+
+For every **high-risk or decision-critical subtask**, the task owner must name a counter-reviewer before accepting its result. A shared red-team role (for example, Murphy) may challenge several workstreams, but each one needs its own concrete counterexample, disconfirming test, or evidence gap. At minimum assign a counter-reviewer for: model equations/flux order; soil and crop parameter priors; measurement/data QA; calibration/identifiability; validation metrics/split design; and any farmer-facing action. Low-risk clerical tasks may use a checklist instead of a separate adversarial pass. Record the paired reviewers and their conclusions in the decision record.
+
+Do not assume a role is an independent agent. Independent review requires genuinely separate reviewer work (such as different people or separately invoked model/tool sessions); identify the actual source. Consensus is recorded only after the evidence review and never replaces passing tests or field evaluation.
+
 ## Required output from every review
 
 - **Decision:** accept / reject / conditional / defer.

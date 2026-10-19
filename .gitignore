@@ -7,3 +7,7 @@ venv/
 secrets.*
 outputs/generated-data/
 outputs/logs/
+.pytest_cache/
+build/
+dist/
+*.egg-info/

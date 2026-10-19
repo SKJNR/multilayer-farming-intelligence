@@ -1,0 +1,90 @@
+{
+  "schema_version": "2.0.0",
+  "profiles": {
+    "semi_arid_red_alfisol_3layer": {
+      "profile_id": "semi_arid_red_alfisol_3layer",
+      "z_mm": [
+        250.0,
+        450.0,
+        800.0
+      ],
+      "theta_sat": [
+        0.43,
+        0.42,
+        0.39
+      ],
+      "theta_fc": [
+        0.24,
+        0.26,
+        0.25
+      ],
+      "theta_wp": [
+        0.1,
+        0.12,
+        0.12
+      ],
+      "theta_aer": [
+        0.33,
+        0.34,
+        0.33
+      ],
+      "ksat_mm_day": [
+        45.0,
+        18.0,
+        8.0
+      ],
+      "interface_conductance": [
+        0.45,
+        0.4
+      ],
+      "brooks_corey_exp": 3.5,
+      "curve_number_ii": 78.0
+    },
+    "humid_lateritic_loam_4layer": {
+      "profile_id": "humid_lateritic_loam_4layer",
+      "z_mm": [
+        150.0,
+        300.0,
+        600.0,
+        1000.0
+      ],
+      "theta_sat": [
+        0.47,
+        0.46,
+        0.44,
+        0.42
+      ],
+      "theta_fc": [
+        0.28,
+        0.3,
+        0.29,
+        0.28
+      ],
+      "theta_wp": [
+        0.12,
+        0.14,
+        0.14,
+        0.13
+      ],
+      "theta_aer": [
+        0.38,
+        0.39,
+        0.38,
+        0.37
+      ],
+      "ksat_mm_day": [
+        65.0,
+        35.0,
+        20.0,
+        12.0
+      ],
+      "interface_conductance": [
+        0.75,
+        0.7,
+        0.6
+      ],
+      "brooks_corey_exp": 3.2,
+      "curve_number_ii": 72.0
+    }
+  }
+}
