@@ -64,6 +64,14 @@ class UniversalCropTraits:
     preferred_zone: str = "flat"              # 'mound', 'trench', or 'flat'
     n_fixing_legume: bool = False
     pathogen_Tags: tuple[str, ...] = field(default_factory=tuple)
+    provenance_sources: tuple[str, ...] = field(default_factory=tuple)
+    evidence_status: str = "SOURCED_CALIBRATION_PENDING"
+
+    def __post_init__(self) -> None:
+        if isinstance(self.pathogen_Tags, list):
+            object.__setattr__(self, "pathogen_Tags", tuple(self.pathogen_Tags))
+        if isinstance(self.provenance_sources, list):
+            object.__setattr__(self, "provenance_sources", tuple(self.provenance_sources))
 
 
 @dataclass(frozen=True)
@@ -80,12 +88,13 @@ class AgronomicMethodSpec:
 
 @dataclass(frozen=True)
 class RemoteSensingContext:
-    """Outputs from SKJNR/GeoAI-Aquaculture-Pond-Identification + PyProSAIL."""
-    pond_water_persistence: float             # Fraction of months MNDWI > 0
-    sar_water_persistence: float              # Fraction of months Sentinel-1 VH < -26 dB
+    """Outputs from satellite SAR/optical perception."""
+    pond_water_persistence: float             # Fraction of months MNDWI > 0 (remote observable)
+    sar_water_persistence: float              # Fraction of months Sentinel-1 VH < -26 dB (remote observable)
     sar_optical_diverge: float                # Sub-canopy standing water / algae pond indicator
-    pond_storage_budget_mm: float             # Available supplemental irrigation depth across farm (mm)
+    pond_storage_budget_mm: float             # Inferred supplemental irrigation depth across farm (mm)
     observed_overstory_lai: float | None = None
+    evidence_status: str = "INFERRED_STORAGE_ESTIMATE_UNVERIFIED_DEPTH"
 
 
 # ============================================================================
@@ -170,12 +179,15 @@ def simulate_multistrata_season(
     crops: list[UniversalCropTraits],
     method: AgronomicMethodSpec,
     weather_daily: list[tuple[float, float]],  # [(precip_mm, et0_pm_mm), ...]
-    rs_context: RemoteSensingContext,
+    rs_context: RemoteSensingContext | None = None,
 ) -> dict[str, object]:
     """
     Simulate an M-crop guild across L soil horizons under a specified AgronomicMethodSpec.
     Enforces exact water mass conservation (< 1e-12 mm) and tracks per-crop yield & stress.
     """
+    if rs_context is None:
+        rs_context = RemoteSensingContext(0.0, 0.0, 0.0, 0.0, None, "RAINFED_NO_SATELLITE_FALLBACK")
+
     L = len(soil.z_mm)
     M = len(crops)
     z = np.array(soil.z_mm, dtype=float)
@@ -325,20 +337,36 @@ def simulate_multistrata_season(
         n_symbiotic_bonus = 1.06 if (has_legume and not c.n_fixing_legume) else 1.00
         bio_security_mult = 1.0 - shared_pathogen_penalty
 
-        # Intercrop density factor (1/M base + canopy/root niche complementarity)
-        unique_roles = len(set(x.stratum_role for x in crops))
-        niche_density = 0.78 if unique_roles == M else (0.55 / max(M, 1))
-        rel_yield = niche_density * water_yield_mult * aer_yield_mult * light_yield_mult * n_symbiotic_bonus * bio_security_mult
+        # Monocrop reference yield (standard sole-crop potential yield baseline)
+        mono_ref_yield_kg_ha = max(1.0, c.potential_yield_kg_ha)
+
+        # Intercrop planting density fraction (rho_m) relative to sole crop:
+        # In multi-strata, distinct canopy strata (over/mid/under) have complementary vertical architecture.
+        if M == 1:
+            plant_density_frac = 1.0
+            niche_bonus = 1.0
+        else:
+            unique_roles = len(set(x.stratum_role for x in crops))
+            plant_density_frac = 0.55 if unique_roles == M else (0.45 / max(M - 1, 1))
+            niche_bonus = 1.12 if unique_roles == M else 0.95
+
+        # Intercrop yield under inter-species competition and complementarity
+        rel_yield = plant_density_frac * niche_bonus * water_yield_mult * aer_yield_mult * light_yield_mult * n_symbiotic_bonus * bio_security_mult
         yield_kg_ha = c.potential_yield_kg_ha * rel_yield
-        ler_total += rel_yield
+
+        # Partial LER: harvested intercrop yield divided by comparable monocrop reference yield
+        partial_ler = 1.000 if M == 1 else float(yield_kg_ha / mono_ref_yield_kg_ha)
+        ler_total += partial_ler
+
         rev = yield_kg_ha * c.price_per_kg
-        cost = c.cost_per_ha * niche_density
+        cost = c.cost_per_ha * plant_density_frac
         gross_rev += rev
         total_cost += cost
         crop_results.append({
             "crop_id": c.crop_id,
-            "relative_yield_ler_share": round(rel_yield, 3),
+            "partial_ler": round(partial_ler, 3),
             "predicted_yield_kg_ha": round(yield_kg_ha, 1),
+            "monocrop_ref_yield_kg_ha": round(mono_ref_yield_kg_ha, 1),
             "et_satisfaction_ratio": round(et_ratio, 3),
             "hypoxia_stress_index": round(float(hypoxia_days[m]), 2),
             "net_margin_per_ha": round(rev - cost, 0),
@@ -352,6 +380,7 @@ def simulate_multistrata_season(
         "total_runoff_mm": round(total_runoff, 2),
         "supplemental_irrigation_used_mm": round(total_irr, 2),
         "max_mass_balance_residual_mm": float(max_mass_residual),
+        "ler_evidence_class": "ILLUSTRATIVE_SIMULATION_CALIBRATION_PENDING",
         "per_crop_breakdown": crop_results,
     }
 

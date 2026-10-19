@@ -67,8 +67,19 @@ def parse_farmer_text_zero_llm_cost(text: str, default_lat: float = 14.68, defau
 
     topo = "mound_trench" if ("mound" in low or "trench" in low or "raised bed" in low) else "flat"
     mulch = bool("mulch" in low or "straw" in low or "residue" in low)
-    pond = True if ("pond" in low or "kuntha" in low or "borewell" in low or "drip" in low) else (False if "no pond" in low or "rainfed only" in low else True)
 
+    # 1. Honest Negation & Unknown Detection for Farm Pond / Irrigation
+    has_neg_pond = any(phrase in low for phrase in ("no pond", "without pond", "no borewell", "no well", "rainfed only", "rainfed", "no irrigation"))
+    has_pos_pond = any(phrase in low for phrase in ("pond", "kuntha", "borewell", "drip", "well", "kunta"))
+
+    if has_neg_pond:
+        pond = False
+    elif has_pos_pond:
+        pond = True
+    else:
+        pond = None  # Explicitly UNKNOWN; do NOT default to True
+
+    # 2. Waterlogging duration
     wl_hours = None
     m_hr = re.search(r"(\d+(?:\.\d+)?)\s*(?:hours|hrs|hr|h)\b", low)
     if m_hr:
@@ -76,29 +87,55 @@ def parse_farmer_text_zero_llm_cost(text: str, default_lat: float = 14.68, defau
     elif "stands" in low or "waterlog" in low or "stagnat" in low:
         wl_hours = 28.0
 
+    # 3. Bottle infiltration test timing
     bottle_sec = None
     m_sec = re.search(r"(\d+(?:\.\d+)?)\s*(?:seconds|secs|sec|s)\b", low)
     if m_sec:
         bottle_sec = float(m_sec.group(1))
 
+    # 4. Budget parsing if present
+    budget = 180000.0
+    m_bud = re.search(r"(?:budget|cost|rs\.?|inr)\s*[:=]?\s*(\d[\d,]*)", low)
+    if m_bud:
+        try:
+            budget = float(m_bud.group(1).replace(",", ""))
+        except ValueError:
+            pass
+
+    # 5. Explicitly identify missing high-uncertainty decision slots
+    unknowns = []
+    if pond is None:
+        unknowns.append("irrigation_or_pond_access")
+    if not detected:
+        unknowns.append("current_crops_or_varieties")
+    if wl_hours is None and "storm" not in low:
+        unknowns.append("storm_waterlogging_hours")
+
     return FarmerConversationContext(
         farmer_query=text,
         lat=default_lat,
         lon=default_lon,
-        detected_existing_crops=detected if detected else ("papaya", "groundnut"),
+        detected_existing_crops=detected,  # Empty tuple if none detected; do NOT hardcode default crops
         observed_topography_in_video=topo,
         observed_mulch_in_video=mulch,
         reported_waterlogging_hours_after_storm=wl_hours,
         has_farm_pond_or_borewell=pond,
         bottle_infiltration_seconds_in_video=bottle_sec,
-        max_budget_per_ha=180000.0,
+        max_budget_per_ha=budget,
+        unknown_critical_slots=tuple(unknowns),
     )
 
 
-class AgronomicSATSolver:
+class AgronomicConstraintChecker:
     """
-    Exact Boolean Satisfiability (SAT) + Pseudo-Boolean Constraint Solver
-    that filters M-crop guilds and methods before running physics simulations.
+    Exact Boolean Clause & Pseudo-Boolean Constraint Checker.
+    Filters M-crop candidate guilds and methods against hard biophysical rules
+    (pathogen sharing, hypoxia tolerance, shade saturation, budget limits).
+
+    Important Engineering & Agronomic Distinction:
+    Constraint satisfiability ('SAT') proves logical consistency with respect to
+    our codified domain clauses C1-C6. It is NOT an empirical proof of agronomic
+    success, yield, or field viability.
     """
 
     def __init__(self, traits_map: dict[str, UniversalCropTraits], methods_map: dict[str, AgronomicMethodSpec]) -> None:
@@ -191,6 +228,10 @@ class AgronomicSATSolver:
                 else:
                     unsat_models.append(res)
         return sat_models, unsat_models
+
+
+# Backward compatibility alias
+AgronomicSATSolver = AgronomicConstraintChecker
 
 
 def run_realtime_zero_llm_pipeline(

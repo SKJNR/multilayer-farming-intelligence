@@ -1,8 +1,12 @@
 """
-Borderless Coordinate Weather, Aerodynamic ET0 & TWI Groundwater Adapter
-=========================================================================
-Bridges SKJNR/agri-tws-ind (build_weather_backbone.py & weather_backbone_riders.py)
-with CHIRPS v3 (0.05 deg) + cross-border AWS inverse-distance-elevation kriging.
+Borderless Coordinate Weather & Aerodynamic ET0 Spatial Adapter
+===============================================================
+Bridges weather forcing using:
+1. Exponential Inverse-Distance Weighting with Environmental Lapse Rate (IDW-ELR)
+   across surrounding Automated Weather Station (AWS) nodes (note: this is spatial IDW,
+   not geostatistical variogram kriging).
+2. Hargreaves-Samani potential ET0 with aerodynamic VPD + wind-speed adjustment
+   (calibrated against regional Penman-Monteith baselines to eliminate drift).
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -96,4 +100,6 @@ def interpolate_borderless_farm_weather(
         "nearest_station_distance_km": round(float(np.min(dists)), 2),
         "wb_r3_hs_vs_aero_mad_frac": round(mad_rel, 4),
         "wb_r3_alert_triggered": bool(mad_rel > 0.15),
+        "interpolation_method": "EXPONENTIAL_IDW_LAPSE_RATE",
+        "et0_method": "HARGREAVES_SAMANI_AERODYNAMIC_VPD_ADJUSTED",
     }

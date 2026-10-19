@@ -49,9 +49,14 @@ def extract_pond_and_canopy_state(
     lai_est = float(np.clip(-2.2 * np.log(np.clip(1.0 - 1.25 * np.mean(rera), 0.08, 0.98)), 0.2, 6.0))
 
     # Effective harvestable farm-pond storage converted to mm depth over cropped area
-    effective_fill_frac = float(np.clip(0.5 * water_persist + 0.5 * sar_water_persist, 0.0, 1.0))
-    usable_volume_m3 = pond_area_m2 * pond_depth_m * effective_fill_frac * 0.75  # 25% dead storage/evap loss
-    pond_budget_mm = (usable_volume_m3 / max(cropped_area_m2, 1.0)) * 1000.0
+    if pond_area_m2 <= 0.0:
+        pond_budget_mm = 0.0
+        ev_status = "NO_POND_ZERO_STORAGE"
+    else:
+        effective_fill_frac = float(np.clip(0.5 * water_persist + 0.5 * sar_water_persist, 0.0, 1.0))
+        usable_volume_m3 = pond_area_m2 * pond_depth_m * effective_fill_frac * 0.75  # 25% dead storage/evap loss
+        pond_budget_mm = (usable_volume_m3 / max(cropped_area_m2, 1.0)) * 1000.0
+        ev_status = "INFERRED_STORAGE_ESTIMATE_UNVERIFIED_DEPTH"
 
     return RemoteSensingContext(
         pond_water_persistence=round(water_persist, 4),
@@ -59,4 +64,5 @@ def extract_pond_and_canopy_state(
         sar_optical_diverge=round(sar_opt_diverge, 4),
         pond_storage_budget_mm=round(pond_budget_mm, 2),
         observed_overstory_lai=round(lai_est, 3),
+        evidence_status=ev_status,
     )

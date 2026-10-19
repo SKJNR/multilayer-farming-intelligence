@@ -23,10 +23,10 @@ class VideoFrameBioAssay:
     Quantitative physical observables extracted by a Vision-Language Model (VLM) +
     monocular depth / segmentation (SAM-2 / Depth-Anything) from raw video frames.
     """
-    source_video_id: str
-    day_index: int
     # 1. Visual topsoil state from video frames (Munsell value/chroma darkening & crack width)
     visual_topsoil_wetness_theta1: float        # Estimated topsoil volumetric moisture (m3/m3)
+    source_video_id: str = "field_video"
+    day_index: int = 0
     topsoil_obs_std: float = 0.025
     # 2. Living-plant tensiometer: leaf drooping/rolling angle & stomatal turgor score in [0, 1]
     visual_canopy_turgor_score: float = 0.85    # 1.0 = full turgor, 0.0 = severe wilting
@@ -148,20 +148,33 @@ class ZeroHardwareSoftSensorAssimilator:
             self.ens_t2[i] = float(np.clip(t2_n + self.rng.normal(0.0, 0.003), self.wp, self.sat))
             pred_fw[i] = 0.4 * fw1_i + 0.6 * fw2_i
 
+        # Joint Bayesian observation assimilation
+        log_lik = np.zeros(self.n, dtype=float)
+        has_obs = False
+
         if sar_surface_theta1_obs is not None:
-            lik = np.exp(-0.5 * ((self.ens_t1 - sar_surface_theta1_obs) / 0.028) ** 2) + 1e-12
-            w = lik / np.sum(lik)
-            idx = self.rng.choice(self.n, size=self.n, p=w)
-            self.ens_t1, self.ens_t2, self.ens_khp = self.ens_t1[idx], self.ens_t2[idx], self.ens_khp[idx]
+            log_lik -= 0.5 * ((self.ens_t1 - sar_surface_theta1_obs) / 0.028) ** 2
+            has_obs = True
 
         if video_bio_assay is not None:
-            lik = np.exp(
-                -0.5 * (
-                    ((self.ens_t1 - video_bio_assay.visual_topsoil_wetness_theta1) / video_bio_assay.topsoil_obs_std) ** 2
-                    + ((pred_fw - video_bio_assay.visual_canopy_turgor_score) / video_bio_assay.turgor_obs_std) ** 2
-                )
-            ) + 1e-12
-            w = lik / np.sum(lik)
+            # Directly compute turgor proxy from current particle moisture states (prevents desynchronization)
+            fw1_curr = np.clip((self.ens_t1 - self.wp) / (self.fc - self.wp), 0.0, 1.0)
+            fw2_curr = np.clip((self.ens_t2 - self.wp) / (self.fc - self.wp), 0.0, 1.0)
+            curr_pred_fw = 0.4 * fw1_curr + 0.6 * fw2_curr
+
+            log_lik -= 0.5 * (
+                ((self.ens_t1 - video_bio_assay.visual_topsoil_wetness_theta1) / max(video_bio_assay.topsoil_obs_std, 1e-4)) ** 2
+                + ((curr_pred_fw - video_bio_assay.visual_canopy_turgor_score) / max(video_bio_assay.turgor_obs_std, 1e-4)) ** 2
+            )
+            has_obs = True
+
+        if has_obs:
+            log_lik -= np.max(log_lik)  # Numerical stability
+            w = np.exp(log_lik)
+            w_sum = float(np.sum(w))
+            w = (w / w_sum) if w_sum > 0 else (np.ones(self.n) / self.n)
+
+            # Atomic posterior resampling across all particle dimensions
             idx = self.rng.choice(self.n, size=self.n, p=w)
             self.ens_t1 = np.clip(self.ens_t1[idx] + self.rng.normal(0.0, 0.003, self.n), self.wp, self.sat)
             self.ens_t2 = np.clip(self.ens_t2[idx] + self.rng.normal(0.0, 0.003, self.n), self.wp, self.sat)

@@ -55,6 +55,7 @@ class FarmerConversationContext:
     has_farm_pond_or_borewell: bool | None = None
     bottle_infiltration_seconds_in_video: float | None = None
     max_budget_per_ha: float = 180000.0
+    unknown_critical_slots: tuple[str, ...] = field(default_factory=tuple)
 
 
 def extract_cv_metrics_from_video_file(video_path: str | Path, max_frames: int = 12) -> dict[str, float]:

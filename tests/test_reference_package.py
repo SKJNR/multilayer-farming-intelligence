@@ -143,10 +143,103 @@ def test_agronomic_sat_solver_and_soft_sensor():
     assert not claim["physically_plausible"]
     assert claim["assigned_evidence_class"] == "REJECTED_PROMOTIONAL_OUTLIER"
 
-    # 4. Zero-LLM-cost text parser test
+    # 4. Zero-LLM-cost text parser test with explicit crop detection
     ctx = parse_farmer_text_zero_llm_cost("I have papaya and groundnut on flat land, water stands 24 hours after rain")
     assert "papaya" in ctx.detected_existing_crops
     assert ctx.reported_waterlogging_hours_after_storm == 24.0
+
+
+def test_negation_and_unknown_slot_handling():
+    from simulation.realtime_sat_edge_advisor import parse_farmer_text_zero_llm_cost
+
+    # A. Negation: "no pond" must NOT evaluate to True
+    ctx_neg = parse_farmer_text_zero_llm_cost("I have red sandy soil, no pond, rainfed only, what can I grow?")
+    assert ctx_neg.has_farm_pond_or_borewell is False
+    assert len(ctx_neg.detected_existing_crops) == 0
+    assert "current_crops_or_varieties" in ctx_neg.unknown_critical_slots
+
+    # B. Explicit pond/borewell with budget parsing
+    ctx_pos = parse_farmer_text_zero_llm_cost("I grow pigeonpea with borewell and drip irrigation, budget: Rs. 150,000")
+    assert ctx_pos.has_farm_pond_or_borewell is True
+    assert "pigeonpea" in ctx_pos.detected_existing_crops
+    assert ctx_pos.max_budget_per_ha == 150000.0
+
+    # C. Ambiguous / Unknown: missing pond remains None (unknown)
+    ctx_unk = parse_farmer_text_zero_llm_cost("I have flat 3 acres of land, recommend crops")
+    assert ctx_unk.has_farm_pond_or_borewell is None
+    assert "irrigation_or_pond_access" in ctx_unk.unknown_critical_slots
+
+
+def test_ler_scientific_soundness_and_monocrop_identity():
+    root = Path(__file__).resolve().parents[1]
+    crops_cfg = json.loads((root / "configs/crop_traits.json").read_text())["crops"]
+    soils_cfg = json.loads((root / "configs/soil_profiles.json").read_text())["profiles"]
+    methods_cfg = json.loads((root / "configs/agronomic_methods.json").read_text())["methods"]
+
+    soil = SoilProfileTensor(
+        profile_id="test",
+        z_mm=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["z_mm"]),
+        theta_sat=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["theta_sat"]),
+        theta_fc=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["theta_fc"]),
+        theta_wp=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["theta_wp"]),
+        theta_aer=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["theta_aer"]),
+        ksat_mm_day=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["ksat_mm_day"]),
+        interface_conductance=tuple(soils_cfg["semi_arid_red_alfisol_3layer"]["interface_conductance"]),
+        brooks_corey_exp=soils_cfg["semi_arid_red_alfisol_3layer"]["brooks_corey_exp"],
+        curve_number_ii=soils_cfg["semi_arid_red_alfisol_3layer"]["curve_number_ii"],
+    )
+    c_gn = UniversalCropTraits(**crops_cfg["groundnut"])
+    method_flat = AgronomicMethodSpec(**methods_cfg["Flat_Bare_NoPond"])
+    weather = [(0.0, 5.0)] * 30 + [(25.0, 4.0)] + [(0.0, 5.5)] * 29
+
+    # 1. Monocrop Identity: Unstressed sole crop LER equals 1.000 (potential baseline)
+    weather_ideal = [(8.0, 3.5)] * 60
+    res_mono = simulate_multistrata_season(soil, [c_gn], method_flat, weather_ideal)
+    assert abs(res_mono["LER"] - 1.0) < 1e-3
+    assert res_mono["per_crop_breakdown"][0]["partial_ler"] <= 1.0
+    assert res_mono["ler_evidence_class"] == "ILLUSTRATIVE_SIMULATION_CALIBRATION_PENDING"
+
+    # 2. Multicrop LER must strictly equal sum of individual partial LERs
+    c_pp = UniversalCropTraits(**crops_cfg["pigeonpea"])
+    res_multi = simulate_multistrata_season(soil, [c_gn, c_pp], method_flat, weather)
+    sum_partials = sum(p["partial_ler"] for p in res_multi["per_crop_breakdown"])
+    assert abs(res_multi["LER"] - round(sum_partials, 3)) < 1e-4
+
+
+def test_particle_filter_joint_likelihood_and_state_alignment():
+    from simulation.multimodal_video_soft_sensor import VideoFrameBioAssay, ZeroHardwareSoftSensorAssimilator
+
+    assimilator = ZeroHardwareSoftSensorAssimilator(n_particles=60, seed=123)
+    bio = VideoFrameBioAssay(
+        visual_topsoil_wetness_theta1=0.22,
+        topsoil_obs_std=0.03,
+        visual_canopy_turgor_score=0.75,
+        turgor_obs_std=0.08,
+    )
+    # Joint assimilation of both SAR and video bio-assay
+    out = assimilator.step_and_assimilate(
+        rain_mm=10.0,
+        et0_mm=5.0,
+        sar_surface_theta1_obs=0.20,
+        video_bio_assay=bio,
+    )
+    assert 0.10 <= out["theta1_mean"] <= 0.44
+    assert 0.10 <= out["theta2_mean"] <= 0.44
+    assert 2.0 <= out["ksat_hardpan_mean"] <= 80.0
+
+
+def test_zero_pond_perception_and_evidence_tag():
+    from simulation.canopy_pond_perception import extract_pond_and_canopy_state
+
+    dummy_bands = {
+        "nir": [0.35] * 12, "red": [0.12] * 12, "green": [0.15] * 12,
+        "blue": [0.08] * 12, "re1": [0.22] * 12, "swir1": [0.18] * 12,
+        "swir2": [0.10] * 12, "VH": [-18.0] * 12, "VV": [-12.0] * 12,
+    }
+    # Case with zero pond area must strictly return 0.0 budget
+    rs_no_pond = extract_pond_and_canopy_state(dummy_bands, pond_area_m2=0.0)
+    assert rs_no_pond.pond_storage_budget_mm == 0.0
+    assert rs_no_pond.evidence_status == "NO_POND_ZERO_STORAGE"
 
 
 if __name__ == "__main__":
@@ -162,4 +255,12 @@ if __name__ == "__main__":
     print("[PASS] test_borderless_spatial_weather_and_canopy_pond_adapters")
     test_agronomic_sat_solver_and_soft_sensor()
     print("[PASS] test_agronomic_sat_solver_and_soft_sensor")
-    print("\nALL 11/11 VERIFICATION SUITES PASSED.")
+    test_negation_and_unknown_slot_handling()
+    print("[PASS] test_negation_and_unknown_slot_handling")
+    test_ler_scientific_soundness_and_monocrop_identity()
+    print("[PASS] test_ler_scientific_soundness_and_monocrop_identity")
+    test_particle_filter_joint_likelihood_and_state_alignment()
+    print("[PASS] test_particle_filter_joint_likelihood_and_state_alignment")
+    test_zero_pond_perception_and_evidence_tag()
+    print("[PASS] test_zero_pond_perception_and_evidence_tag")
+    print("\nALL 15/15 VERIFICATION SUITES PASSED.")

@@ -25,7 +25,13 @@
       "pathogen_Tags": [
         "phytophthora",
         "meloidogyne"
-      ]
+      ],
+      "provenance_sources": [
+        "FAO-56 Table 12 (Kc_basal=1.05)",
+        "ANGRAU Papaya Production & Irrigation Guidelines",
+        "ICAR-IIHR Co-7 Multi-Tier Trial Notes"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "pigeonpea": {
       "crop_id": "pigeonpea",
@@ -47,7 +53,13 @@
       "cost_per_ha": 28000.0,
       "preferred_zone": "mound",
       "n_fixing_legume": true,
-      "pathogen_Tags": []
+      "pathogen_Tags": [],
+      "provenance_sources": [
+        "ICRISAT Semi-Arid Legumes Database (max_root_depth=1.4m)",
+        "FAO-33 Ky=0.85 Yield Response to Water",
+        "ANGRAU Redgram LRG-41 Cultivar Monograph"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "groundnut": {
       "crop_id": "groundnut",
@@ -69,7 +81,12 @@
       "cost_per_ha": 34000.0,
       "preferred_zone": "flat",
       "n_fixing_legume": true,
-      "pathogen_Tags": []
+      "pathogen_Tags": [],
+      "provenance_sources": [
+        "ICRISAT Groundnut Water-Use Efficiency Trials (Anantapur Dharani/K6)",
+        "FAO-56 Table 12 Kc_basal=0.85"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "turmeric": {
       "crop_id": "turmeric",
@@ -91,7 +108,12 @@
       "cost_per_ha": 85000.0,
       "preferred_zone": "trench",
       "n_fixing_legume": false,
-      "pathogen_Tags": []
+      "pathogen_Tags": [],
+      "provenance_sources": [
+        "ICAR-IISR Kozhikode Spices Monograph (Prathibha/Kedaram)",
+        "FAO Shade-Tolerance Agroforestry Database"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "chilli": {
       "crop_id": "chilli",
@@ -116,7 +138,12 @@
       "pathogen_Tags": [
         "phytophthora",
         "meloidogyne"
-      ]
+      ],
+      "provenance_sources": [
+        "ANGRAU Guntur Mirchi Bulletins (LCA-334/Teja)",
+        "Phytophthora capsici Soilborne Host Registry"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "coconut": {
       "crop_id": "coconut",
@@ -138,7 +165,12 @@
       "cost_per_ha": 65000.0,
       "preferred_zone": "mound",
       "n_fixing_legume": false,
-      "pathogen_Tags": []
+      "pathogen_Tags": [],
+      "provenance_sources": [
+        "ICAR-CPCRI Kasaragod Palms Handbook (WCT/COD)",
+        "FAO-56 Table 12 Kc_basal=0.95"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "black_pepper": {
       "crop_id": "black_pepper",
@@ -162,7 +194,11 @@
       "n_fixing_legume": false,
       "pathogen_Tags": [
         "phytophthora"
-      ]
+      ],
+      "provenance_sources": [
+        "ICAR-IISR Panniyur Agroforestry Guild Notes (Shade Obligate Vine)"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     },
     "cowpea": {
       "crop_id": "cowpea",
@@ -184,7 +220,12 @@
       "cost_per_ha": 22000.0,
       "preferred_zone": "flat",
       "n_fixing_legume": true,
-      "pathogen_Tags": []
+      "pathogen_Tags": [],
+      "provenance_sources": [
+        "ICAR-CRIDA Dryland Legumes Database",
+        "FAO-33 Ky=0.78 Yield Response to Water"
+      ],
+      "evidence_status": "SOURCED_CALIBRATION_PENDING"
     }
   }
 }
